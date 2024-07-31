@@ -1,7 +1,17 @@
 import React from "react";
 import { Formik, Form, Field, ErrorMessage} from 'formik';
 import * as Yup from 'yup';
+import axios from "axios";
 import './Regristro.css';
+//import { response } from "express";
+
+const validationSchema = Yup.object({
+    name: Yup.string().required('Requerido'),
+    email: Yup.string().email('Email invalido').required('Requerido'),
+    password: Yup.string().min(6,'Debe tener al menos 6 caracteres').required('Requerido'),
+    //confirmPassword: Yup.string().oneOf([Yup.ref('password'), null],'Las contraseñas deben de coincidir').required('Requerido'),
+
+});
 
 const Registro = ()=>{
     const initialValues = {
@@ -11,17 +21,22 @@ const Registro = ()=>{
         confirmPassword: '', 
     };
 
-    const validationSchema = Yup.object({
-        nombre: Yup.string().required('Requerido'),
-        email: Yup.string().email('Email invalido').required('Requerido'),
-        password: Yup.string().min(6,'Debe tener al menos 6 caracteres').required('Requerido'),
-        confirmPassword: Yup.string().oneOf([Yup.ref('password'), null],'Las contraseñas deben de coincidir').required('Requerido'),
-
-    });
-
-    const onSubmit = (values)=>{
-        console.log('Formulario enviado');
-        console.log(values);
+    const onSubmit = (values,{setSubmitting, resetForm})=>{
+        axios.post('http://localhost:4000/api/registration',values)
+        .then(response =>{
+            console.log(response.data);
+            resetForm();
+        })
+        .catch(error =>{
+            console.error(error);
+        })
+        .finally(()=>{
+            setSubmitting(false);
+        });
+        
+        
+        //console.log('Formulario enviado');
+        //console.log(values);
     };
 
     return (
@@ -32,33 +47,29 @@ const Registro = ()=>{
                 validationSchema={validationSchema}
                 onSubmit={onSubmit}
                 >
-                    <Form>
+                    {({isSubmitting})=> (
+                        <Form>
                         <div className="form-control">
-                            <label htmlFor="nombre">Nombre</label>
-                            <Field type="text" id="nombre" name="nombre"/>
-                            <ErrorMessage name="nombre" component="div" className="error"/>
+                            <label htmlFor="name">Name</label>
+                            <Field type="text" id="name" name="name"/>
+                            <ErrorMessage name="name" component="div" className="error"/>
                         </div>
 
                         <div className="form-control">
-                            <label htmlFor="nombre">Correo</label>
+                            <label htmlFor="nombre">Email</label>
                             <Field type="email" id="email" name="email"/>
                             <ErrorMessage name="email" component="div" className="error"/>
                         </div>
 
                         <div className="form-control">
-                            <label htmlFor="password">Clave</label>
+                            <label htmlFor="password">Password</label>
                             <Field type="password" id="password" name="password"/>
                             <ErrorMessage name="password" component="div" className="error"/>
                         </div>
-
-                        <div className="form-control">
-                            <label htmlFor="confirmPassword">Confirmar</label>
-                            <Field type="password" id="confirmPassword" name="confirmPassword"/>
-                            <ErrorMessage name="confirmPassword" component="div" className="error"/>
-                        </div>
-                        <button type="submit">Registrar</button>
+                        <button type="submit" disabled={isSubmitting}>Registrar</button>
 
                     </Form>
+                    )}
                 </Formik>
         </div>
     );
